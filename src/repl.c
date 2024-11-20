@@ -25,6 +25,7 @@ void init_repl(void) {
         if (input_buffer.buffer[0] == '.') {
             if (strcmp(input_buffer.buffer, ".exit") == 0) {
                 _clear_buffer(&input_buffer);
+                printf("GOODBYE!\n");
                 exit(EXIT_SUCCESS);
             } else {
                 printf("Unrecognized meta command '%s'\n", input_buffer.buffer);
@@ -64,4 +65,5 @@ static void _read_input(InputBuffer* input_buffer) {
 
 static void _clear_buffer(InputBuffer* input_buffer) {
     free(input_buffer->buffer);
+    input_buffer->buffer = NULL;
 }
