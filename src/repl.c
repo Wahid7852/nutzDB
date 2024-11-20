@@ -1,25 +1,21 @@
 #include "headers/repl.h"
+#include "headers/parser.h"
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 
-struct InputBuffer {
-    char* buffer;
-    size_t buffer_length;
-    ssize_t input_length;
-};
-
-static InputBuffer* _new_input_buffer();
-static void _print_prompt();
-static void _read_input(InputBuffer*);
-static void _clear_buffer(InputBuffer*);
+static InputBuffer* _new_input_buffer(void);
+static void _print_prompt(void);
+static void _read_input(InputBuffer* input_buffer);
+static void _clear_buffer(InputBuffer* input_buffer);
 
 /***************************************************************
                         PUBLIC FUNCTIONS
 ****************************************************************/
-void init_repl() {
+void init_repl(void) {
     InputBuffer* input_buffer = _new_input_buffer();
     if (!input_buffer) {
         fprintf(stderr, "Error: Failed to allocate memory for InputBuffer\n");
@@ -30,19 +26,25 @@ void init_repl() {
         _print_prompt();
         _read_input(input_buffer);
 
-        if (strcmp(input_buffer->buffer, ".exit") == 0) {
-            _clear_buffer(input_buffer);
-            exit(EXIT_SUCCESS);
-        } else {
-            printf("Unrecognized command '%s'\n", input_buffer->buffer);
+        if (input_buffer->buffer[0] == '.') {
+            if (strcmp(input_buffer->buffer, ".exit") == 0) {
+                _clear_buffer(input_buffer);
+                exit(EXIT_SUCCESS);
+            } else {
+                printf("Unrecognized meta command '%s'\n",
+                       input_buffer->buffer);
+                continue;
+            }
         }
+        Parser(input_buffer);
     }
 }
 
 /***************************************************************
                         PRIVATE FUNCTIONS
 ****************************************************************/
-static InputBuffer* _new_input_buffer() {
+
+static InputBuffer* _new_input_buffer(void) {
     InputBuffer* input_buffer = (InputBuffer*)malloc(sizeof(InputBuffer));
     input_buffer->buffer = NULL;
     input_buffer->buffer_length = 0;
@@ -51,7 +53,7 @@ static InputBuffer* _new_input_buffer() {
     return input_buffer;
 }
 
-static void _print_prompt() {
+static void _print_prompt(void) {
     printf("nutzdb > ");
 }
 

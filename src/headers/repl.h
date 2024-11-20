@@ -1,6 +1,11 @@
 #pragma once
+
 #include <stdlib.h>
 
-typedef struct InputBuffer InputBuffer;
+typedef struct {
+    char* buffer;
+    size_t buffer_length;
+    size_t input_length;
+} InputBuffer;
 
-void init_repl();
+void init_repl(void);

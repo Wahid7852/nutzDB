@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra
 
 TARGET = nutzDB
 SOURCES = $(wildcard src/*.c)
