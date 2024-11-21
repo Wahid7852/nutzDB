@@ -2,7 +2,8 @@
 
 #include "repl.h"
 
-// Internal types and enums
+#define TABLE_MAX_ROWS 10
+
 typedef enum { INSERT, SELECT, DELETE, ROLLBACK } StatementType;
 
 typedef enum {
@@ -12,13 +13,24 @@ typedef enum {
 
 typedef struct {
     StatementType type;
+    size_t id;
+    char username[32];
 } Statement;
 
-// Function pointer for executor functions
-typedef void (*ExecutorFunction)(void);
+typedef void (*ExecutorFunction)(Statement* statement);
 
 typedef struct {
     const char* keyword;
     StatementType type;
     ExecutorFunction function;
 } KeywordMapping;
+
+typedef struct {
+    size_t id;
+    char username[32];
+} Row;
+
+typedef struct {
+    Row rows[TABLE_MAX_ROWS];
+    size_t num_rows;
+} Table;
