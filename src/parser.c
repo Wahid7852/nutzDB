@@ -1,31 +1,13 @@
 #include "headers/parser.h"
+#include "headers/parser_private.h"
 #include "headers/repl.h"
 
 #include <stdio.h>
 #include <string.h>
 
 /***************************************************************
-                    PRIVATE INITIALIZATION STUFF
+                   PRIVATE INITIALIZATION STUFF
 ****************************************************************/
-typedef enum { INSERT, SELECT, DELETE, ROLLBACK } StatementType;
-
-typedef enum {
-    STATEMENT_RECOGNIZED,
-    STATEMENT_UNRECOGNIZED
-} StatementRecognitionResult;
-
-typedef void (*ExecutorFunction)(void);
-
-typedef struct {
-    const char* keyword;
-    StatementType type;
-    ExecutorFunction function;
-} KeywordMapping;
-
-typedef struct {
-    StatementType type;
-} Statement;
-
 static StatementRecognitionResult _make_statement(InputBuffer* input_buffer,
                                                   Statement* statement);
 static void _statement_executer(Statement* statement);
