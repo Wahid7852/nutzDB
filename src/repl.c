@@ -21,7 +21,6 @@ void init_repl(void) {
     while (1) {
         _print_prompt();
         _read_input(&input_buffer);
-
         if (input_buffer.buffer[0] == '.') {
             if (strcmp(input_buffer.buffer, ".exit") == 0) {
                 _clear_buffer(&input_buffer);
