@@ -28,12 +28,12 @@ static const KeywordMapping mappings[] = {
 static const size_t num_mappings = sizeof(mappings) / sizeof(mappings[0]);
 
 static Table db = {.num_rows = 0};
-static Statement statement;
 
 /***************************************************************
                         PUBLIC FUNCTIONS
 ****************************************************************/
 void Parser(InputBuffer* input_buffer) {
+    Statement statement;
     switch (_make_statement(input_buffer, &statement)) {
         case (STATEMENT_RECOGNIZED):
             _statement_executer(&statement);
@@ -44,6 +44,20 @@ void Parser(InputBuffer* input_buffer) {
             printf("Unrecognized '%s'.\n", input_buffer->buffer);
             break;
     }
+}
+
+void save_table_to_disk() {
+    FILE* file = fopen(FILENAME, "wb");
+    if (file == NULL) {
+        fprintf(stderr, "Error: could not open file.");
+        return;
+    }
+
+    // TODO: bruhh there's no need for explaination here :skull:
+    fwrite(&db.num_rows, sizeof(size_t), 1, file);
+    fwrite(db.rows, sizeof(Row), db.num_rows, file);
+
+    fclose(file);
 }
 
 /***************************************************************

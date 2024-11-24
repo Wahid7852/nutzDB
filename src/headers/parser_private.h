@@ -3,6 +3,7 @@
 #include "repl.h"
 
 #define TABLE_MAX_ROWS 10
+#define FILENAME "database.db"
 
 typedef enum { INSERT, SELECT, DELETE, ROLLBACK } StatementType;
 

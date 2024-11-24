@@ -24,6 +24,7 @@ void init_repl(void) {
         if (input_buffer.buffer[0] == '.') {
             if (strcmp(input_buffer.buffer, ".exit") == 0) {
                 _clear_buffer(&input_buffer);
+                save_table_to_disk();
                 printf("GOODBYE!\n");
                 exit(EXIT_SUCCESS);
             } else {
