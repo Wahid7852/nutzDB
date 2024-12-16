@@ -35,23 +35,21 @@ typedef struct {
     Row data;
 } Statement;
 
-typedef void (*ExecutorFunction)(Statement* statement);
-
 typedef struct {
-    const char* keyword;
+    const char *keyword;
     StatementType type;
-    ExecutorFunction function;
+    void (*function)(const Statement *statement);
 } KeywordMapping;
 
-static StatementRecognitionResult _make_statement(InputBuffer* input_buffer,
-                                                  Statement* statement);
-static void _statement_executer(Statement* statement);
-static void _debug_table(Table* table);
+static StatementRecognitionResult _make_statement(
+    const inputbuffer_t *input_buffer, Statement *statement);
+static void _debug_table(Table *table);
 
-static void _insert_execute(Statement* statement);
-static void _select_execute(Statement* statement);
-static void _delete_execute(Statement* statement);
-static void _rollback_execute(Statement* statement);
+static void _statement_executer(Statement *statement);
+static void _insert_execute(const Statement *statement);
+static void _select_execute(const Statement *statement);
+static void _delete_execute(const Statement *statement);
+static void _rollback_execute(const Statement *statement);
 
 static const KeywordMapping mappings[] = {
     {"insert", INSERT, _insert_execute},
@@ -66,7 +64,7 @@ static Table db = {.num_rows = 0};
 /***************************************************************
                         PUBLIC FUNCTIONS
 ****************************************************************/
-void Parser(InputBuffer* input_buffer) {
+void Parser(inputbuffer_t *input_buffer) {
     Statement statement;
     switch (_make_statement(input_buffer, &statement)) {
         case (STATEMENT_RECOGNIZED):
@@ -80,8 +78,8 @@ void Parser(InputBuffer* input_buffer) {
     }
 }
 
-void save_table_to_disk() {
-    FILE* file = fopen(FILENAME, "wb");
+void save_table_to_disk(void) {
+    FILE *file = fopen(FILENAME, "wb");
     if (file == NULL) {
         fprintf(stderr, "Error: could not open file.");
         return;
@@ -98,8 +96,8 @@ void save_table_to_disk() {
 /***************************************************************
                         PRIVATE FUNCTIONS
 ****************************************************************/
-static StatementRecognitionResult _make_statement(InputBuffer* input_buffer,
-                                                  Statement* statement) {
+static StatementRecognitionResult _make_statement(
+    const inputbuffer_t *input_buffer, Statement *statement) {
     for (size_t i = 0; i < num_mappings; ++i) {
         if (strncmp(input_buffer->buffer, mappings[i].keyword,
                     strlen(mappings[i].keyword)) == 0) {
@@ -110,9 +108,9 @@ static StatementRecognitionResult _make_statement(InputBuffer* input_buffer,
                     char username[32];
                     if (sscanf(input_buffer->buffer, "insert %zu %31s", &id,
                                username) < 2) {
-                        printf(
-                            "Syntax error. Correct usage: insert <id> "
-                            "<username>\n");
+                        fprintf(stderr,
+                                "Syntax error. Correct usage: insert <id> "
+                                "<username>\n");
                         return STATEMENT_INCOMPLETE;
                     }
                     // printf("id = %zu and username = %s\n", id, username);
@@ -133,7 +131,7 @@ static StatementRecognitionResult _make_statement(InputBuffer* input_buffer,
     return STATEMENT_UNRECOGNIZED;
 }
 
-static void _statement_executer(Statement* statement) {
+static void _statement_executer(Statement *statement) {
     for (size_t i = 0; i < num_mappings; ++i) {
         if (mappings[i].type == statement->type) {
             mappings[i].function(statement);
@@ -142,35 +140,35 @@ static void _statement_executer(Statement* statement) {
     }
 }
 
-static void _debug_table(Table* table) {
+static void _debug_table(Table *table) {
     for (size_t i = 0; i < table->num_rows; ++i) {
         printf("id -> %zu & username -> %s\n", table->rows[i].id,
                table->rows[i].username);
     }
 }
 
-static void _insert_execute(Statement* statement) {
+static void _insert_execute(const Statement *statement) {
     if (db.num_rows >= TABLE_MAX_ROWS) {
-        printf("Error: Table full.\n");
+        fprintf(stderr, "Error: Table full.\n");
         return;
     }
-    Row* row = &db.rows[db.num_rows++];
+    Row *row = &db.rows[db.num_rows++];
     row->id = statement->data.id;
     strncpy(row->username, statement->data.username, sizeof(row->username));
     _debug_table(&db);
 }
 
-static void _select_execute(Statement* statement) {
+static void _select_execute(const Statement *statement) {
     (void)statement;
     printf("SELECT goes here\n");
 }
 
-static void _delete_execute(Statement* statement) {
+static void _delete_execute(const Statement *statement) {
     (void)statement;
     printf("DELETE goes here\n");
 }
 
-static void _rollback_execute(Statement* statement) {
+static void _rollback_execute(const Statement *statement) {
     (void)statement;
     printf("ROLLBACK goes here\n");
 }

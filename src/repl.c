@@ -1,5 +1,4 @@
 #include "headers/repl.h"
-#include "headers/parser.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -7,16 +6,18 @@
 #include <string.h>
 #include <sys/types.h>
 
-static InputBuffer _new_input_buffer(void);
+#include "headers/parser.h"
+
+static inputbuffer_t _new_input_buffer(void);
 static void _print_prompt(void);
-static void _read_input(InputBuffer* input_buffer);
-static void _clear_buffer(InputBuffer* input_buffer);
+static void _read_input(inputbuffer_t *input_buffer);
+static void _clear_buffer(inputbuffer_t *input_buffer);
 
 /***************************************************************
                         PUBLIC FUNCTIONS
 ****************************************************************/
 void init_repl(void) {
-    InputBuffer input_buffer = _new_input_buffer();
+    inputbuffer_t input_buffer = _new_input_buffer();
     printf(".exit to Exit\n");
     while (1) {
         _print_prompt();
@@ -39,22 +40,20 @@ void init_repl(void) {
 /***************************************************************
                         PRIVATE FUNCTIONS
 ****************************************************************/
-static InputBuffer _new_input_buffer(void) {
-    InputBuffer input_buffer = {
+static inputbuffer_t _new_input_buffer(void) {
+    inputbuffer_t input_buffer = {
         .buffer = NULL, .buffer_length = 0, .input_length = 0};
     return input_buffer;
 }
 
-static void _print_prompt(void) {
-    printf("nutzdb > ");
-}
+static void _print_prompt(void) { printf("nutzdb > "); }
 
-static void _read_input(InputBuffer* input_buffer) {
+static void _read_input(inputbuffer_t *input_buffer) {
     ssize_t bytes_read =
         getline(&(input_buffer->buffer), &(input_buffer->buffer_length), stdin);
 
     if (bytes_read <= 0) {
-        printf("Error reading input\n");
+        fprintf(stderr, "Error reading input\n");
         _clear_buffer(input_buffer);
         exit(EXIT_FAILURE);
     }
@@ -63,7 +62,7 @@ static void _read_input(InputBuffer* input_buffer) {
     input_buffer->buffer[bytes_read - 1] = 0;
 }
 
-static void _clear_buffer(InputBuffer* input_buffer) {
+static void _clear_buffer(inputbuffer_t *input_buffer) {
     free(input_buffer->buffer);
     input_buffer->buffer = NULL;
 }
