@@ -159,13 +159,17 @@ static StatementRecognitionResult _make_statement(
 }
 
 static void _serializer(const Row *src, void *const dest) {
-    memcpy(dest + ID_OFFSET, &(src->id), ID_SIZE);
-    memcpy(dest + USERNAME_OFFSET, &(src->username), USERNAME_SIZE);
+    char *dest_bytes = (char *)dest;
+    
+    memcpy(dest_bytes + ID_OFFSET, &(src->id), ID_SIZE);
+    memcpy(dest_bytes + USERNAME_OFFSET, &(src->username), USERNAME_SIZE);
 }
 
 static void _deserializer(const void *src, Row *const dest) {
-    memcpy(&(dest->id), src + ID_OFFSET, ID_SIZE);
-    memcpy(&(dest->username), src + USERNAME_OFFSET, USERNAME_SIZE);
+    const char *src_bytes = (const char *)src;
+    
+    memcpy(&(dest->id), src_bytes + ID_OFFSET, ID_SIZE);
+    memcpy(&(dest->username), src_bytes + USERNAME_OFFSET, USERNAME_SIZE);
 }
 
 static void *_row_slot(Table *table, size_t row_num) {
@@ -178,7 +182,7 @@ static void *_row_slot(Table *table, size_t row_num) {
     // printf("page_num -> %zu | row_offset = %zu | row_size -> %hhu\n",
     // page_num,
     //        row_offset, ROW_SIZE);
-    return page + (row_offset * ROW_SIZE);
+    return (char *)page + (row_offset * ROW_SIZE);
 }
 
 static void _statement_executer(Statement *statement) {

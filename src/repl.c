@@ -1,67 +1,100 @@
 #include "headers/repl.h"
-
-#include <stddef.h>
+#include "headers/parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <errno.h>
+#include <signal.h>
 
-#include "headers/parser.h"
-
-static inputbuffer_t _new_input_buffer(void);
-static void _print_prompt(void);
-static void _read_input(inputbuffer_t *input_buffer);
-static void _clear_buffer(inputbuffer_t *input_buffer);
+static inputbuffer_t* new_input_buffer(void);
+static void print_prompt(void);
+static int read_input(inputbuffer_t* input_buffer);
+static void clear_buffer(inputbuffer_t* input_buffer);
 
 /*******************************************************************************
                                 PUBLIC FUNCTIONS
 *******************************************************************************/
 void init_repl(void) {
-    inputbuffer_t input_buffer = _new_input_buffer();
+    inputbuffer_t* input_buffer = new_input_buffer();
+    
     printf(".exit to Exit\n");
-    while (1) {
-        _print_prompt();
-        _read_input(&input_buffer);
-        if (input_buffer.buffer[0] == '.') {
-            if (strcmp(input_buffer.buffer, ".exit") == 0) {
-                _clear_buffer(&input_buffer);
-                printf("GOODBYE!\n");
-                exit(EXIT_SUCCESS);
-            } else {
-                printf("Unrecognized meta command '%s'\n", input_buffer.buffer);
-                continue;
-            }
-        }
-        Parser(&input_buffer);
-    }
-}
 
+    while (1) {
+        print_prompt();
+        clear_buffer(input_buffer);        
+
+        if (read_input(input_buffer) != 0) {
+            break;
+        }
+
+        if (strcmp(input_buffer->buffer, ".exit") == 0) {
+            printf("GOODBYE!\n");
+            break;
+        }
+
+        if (input_buffer->buffer[0] == '.') {
+            printf("Unrecognized meta command '%s'\n", input_buffer->buffer);
+            continue;
+        }
+
+        Parser(input_buffer);
+    }
+
+    clear_buffer(input_buffer);
+    free(input_buffer);
+}
 /*******************************************************************************
                                PRIVATE FUNCTIONS
 *******************************************************************************/
-static inputbuffer_t _new_input_buffer(void) {
-    inputbuffer_t input_buffer = {
-        .buffer = NULL, .buffer_length = 0, .input_length = 0};
+static inputbuffer_t* new_input_buffer(void) {
+    inputbuffer_t* input_buffer = malloc(sizeof(inputbuffer_t));
+    if (!input_buffer) {
+        fprintf(stderr, "Memory allocation failed for input buffer\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    input_buffer->buffer = NULL;
+    input_buffer->buffer_length = 0;
+    input_buffer->input_length = 0;
+    
     return input_buffer;
 }
 
-static void _print_prompt(void) { printf("nutzdb > "); }
-
-static void _read_input(inputbuffer_t *input_buffer) {
-    ssize_t bytes_read =
-        getline(&(input_buffer->buffer), &(input_buffer->buffer_length), stdin);
-
-    if (bytes_read <= 0) {
-        fprintf(stderr, "Error reading input\n");
-        _clear_buffer(input_buffer);
-        exit(EXIT_FAILURE);
-    }
-
-    input_buffer->input_length = bytes_read - 1;
-    input_buffer->buffer[bytes_read - 1] = 0;
+static void print_prompt(void) {
+    printf("nutzdb > ");
+    fflush(stdout);
 }
 
-static void _clear_buffer(inputbuffer_t *input_buffer) {
-    free(input_buffer->buffer);
-    input_buffer->buffer = NULL;
+static int read_input(inputbuffer_t* input_buffer) {
+    ssize_t bytes_read = getline(&(input_buffer->buffer), 
+                                 &(input_buffer->buffer_length), 
+                                 stdin);
+    
+    if (bytes_read <= 0) {
+        if (feof(stdin)) {
+            printf("\nEOF detected. Exiting.\n");
+            return -1;
+        }
+        
+        fprintf(stderr, "Error reading input\n");
+        return -1;
+    }
+
+    if (bytes_read > 0 && input_buffer->buffer[bytes_read - 1] == '\n') {
+        input_buffer->buffer[bytes_read - 1] = '\0';
+        input_buffer->input_length = bytes_read - 1;
+    } else {
+        input_buffer->input_length = bytes_read;
+    }
+
+    return 0;
+}
+
+static void clear_buffer(inputbuffer_t* input_buffer) {
+    if (input_buffer && input_buffer->buffer) {
+        free(input_buffer->buffer);
+        input_buffer->buffer = NULL;
+        input_buffer->buffer_length = 0;
+        input_buffer->input_length = 0;
+    }
 }
