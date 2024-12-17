@@ -13,9 +13,9 @@ static void _print_prompt(void);
 static void _read_input(inputbuffer_t *input_buffer);
 static void _clear_buffer(inputbuffer_t *input_buffer);
 
-/***************************************************************
-                        PUBLIC FUNCTIONS
-****************************************************************/
+/*******************************************************************************
+                                PUBLIC FUNCTIONS
+*******************************************************************************/
 void init_repl(void) {
     inputbuffer_t input_buffer = _new_input_buffer();
     printf(".exit to Exit\n");
@@ -25,7 +25,6 @@ void init_repl(void) {
         if (input_buffer.buffer[0] == '.') {
             if (strcmp(input_buffer.buffer, ".exit") == 0) {
                 _clear_buffer(&input_buffer);
-                save_table_to_disk();
                 printf("GOODBYE!\n");
                 exit(EXIT_SUCCESS);
             } else {
@@ -37,9 +36,9 @@ void init_repl(void) {
     }
 }
 
-/***************************************************************
-                        PRIVATE FUNCTIONS
-****************************************************************/
+/*******************************************************************************
+                               PRIVATE FUNCTIONS
+*******************************************************************************/
 static inputbuffer_t _new_input_buffer(void) {
     inputbuffer_t input_buffer = {
         .buffer = NULL, .buffer_length = 0, .input_length = 0};
